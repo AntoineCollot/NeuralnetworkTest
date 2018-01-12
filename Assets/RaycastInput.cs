@@ -43,8 +43,8 @@ public class RaycastInput : InputLayer {
         }
     }
 	
-	// Update is called once per frame
-	void Update () {
+    public void CustomUpdate()
+    {
         for (int i = 0; i < directions.Length; i++)
         {
             float hitDistance = Physics2D.Raycast(transform.position, directions[i], raycastMaxDistance, raycastLayer).distance;

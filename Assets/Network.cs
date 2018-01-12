@@ -53,6 +53,69 @@ namespace NeuralNetwork
             else
                 onOutput.Invoke(false);
         }
+
+        private void OnDrawGizmosSelected()
+        {
+            //Inputs
+            Gizmos.color = Color.green;
+            List<Vector3> inputPositions = new List<Vector3>();
+            Vector3 currentPos = transform.position;
+            foreach (float i in inputLayer.inputs)
+            {
+                inputPositions.Add(currentPos);
+                Gizmos.DrawSphere(currentPos, 0.5f);
+                UnityEditor.Handles.Label(currentPos + new Vector3(-1.5f,0.25f, 0), i.ToString());
+                currentPos.y -= 2;
+            }
+
+            //Neurons
+            Gizmos.color = Color.blue;
+            List<Vector3> previousLayerPositions = inputPositions;
+            currentPos = transform.position;
+
+            foreach (NeuronLayer l in hiddenLayers)
+            {
+                currentPos.x += 7;
+                List<Vector3> neuronPositions = new List<Vector3>();
+
+                //Draw neuron
+                for (int i = 0; i < l.neuronCount; i++)
+                {
+                    Gizmos.DrawSphere(currentPos, 0.5f);
+                    neuronPositions.Add(currentPos);
+
+                    //Draw lines
+                    for (int j = 0; j < previousLayerPositions.Count; j++)
+                    {
+                        Gizmos.DrawLine(currentPos, previousLayerPositions[j]);
+                        if (l.neurons != null)
+                        {
+                            UnityEditor.Handles.Label(Vector3.Lerp(previousLayerPositions[j], currentPos, Mathf.Clamp01((l.neurons[i].weights[j] * 0.8f + 1) * 0.5f)), l.neurons[i].weights[j].ToString());
+                        }
+                    }
+                    currentPos.y -= 3;
+                }
+
+                previousLayerPositions = neuronPositions;
+            }
+
+            //Output
+            Gizmos.color = Color.red;
+            currentPos.y = transform.position.y;
+            currentPos.x += 7;
+
+            Gizmos.DrawSphere(currentPos, 0.5f);
+
+            //Draw lines
+            for (int j = 0; j < previousLayerPositions.Count; j++)
+            {
+                Gizmos.DrawLine(currentPos, previousLayerPositions[j]);
+                if (outputLayer.neurons != null)
+                {
+                    UnityEditor.Handles.Label(Vector3.Lerp(previousLayerPositions[j], currentPos, Mathf.Clamp01((outputLayer.neurons[0].weights[j] * 0.8f + 1) * 0.5f)), outputLayer.neurons[0].weights[j].ToString());
+                }
+            }
+        }
     }
 
     public class InputLayer : MonoBehaviour
@@ -65,7 +128,8 @@ namespace NeuralNetwork
     {
         public int neuronCount;
 
-        Neuron[] neurons;
+        [HideInInspector]
+        public Neuron[] neurons;
 
         public float[] Compute(float[] inputs)
         {
@@ -98,9 +162,9 @@ namespace NeuralNetwork
 
             for (int i = 0; i < weights.Length; i++)
             {
-                weights[i] = Random.Range(-1, 1);
+                weights[i] = Random.Range(-1.0f, 1.0f);
             }
-            activationValue = Random.Range(0, 1);
+            activationValue = Random.Range(0.0f, 1.0f);
         }
 
         public float Compute(float[] inputs)
@@ -122,6 +186,6 @@ namespace NeuralNetwork
 
         public float[] weights;
 
-        public int activationValue;
+        public float activationValue;
     }
 }
