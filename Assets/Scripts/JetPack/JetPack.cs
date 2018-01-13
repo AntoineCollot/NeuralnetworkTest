@@ -12,11 +12,12 @@ public class JetPack : MonoBehaviour {
 
     Vector2 momemtum;
 
-    bool fly;
+    [HideInInspector]
+    public bool fly;
 
     public void CustomUpdate()
     {
-        if (Input.GetButtonDown("Fly") || fly)
+        if (Input.GetButton("Fly") || fly)
         {
             momemtum += flyForce;
         }

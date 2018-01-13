@@ -5,7 +5,7 @@ using UnityEngine;
 public class FlappyObstacleGenerator : MonoBehaviour {
 
     [SerializeField]
-    Transform[] obstaclePrefabs;
+    Obstacle[] obstaclePrefabs;
 
     [SerializeField]
     float minTime;
@@ -17,7 +17,7 @@ public class FlappyObstacleGenerator : MonoBehaviour {
     float heightVariationsRange;
 
     [SerializeField]
-    float obstacleLifetime;
+    float obstacleStepLifeTime;
 
 	// Use this for initialization
 	void Start () {
@@ -30,10 +30,10 @@ public class FlappyObstacleGenerator : MonoBehaviour {
         {
             yield return new WaitForSeconds(Random.Range(minTime, maxTime));
 
-            Transform newObstacle = Instantiate(obstaclePrefabs[Random.Range(0,obstaclePrefabs.Length)], transform);
+            Obstacle newObstacle = Instantiate(obstaclePrefabs[Random.Range(0,obstaclePrefabs.Length)], transform);
             Vector3 pos = Vector3.up * Random.Range(-heightVariationsRange*0.5f, heightVariationsRange*0.5f);
-            newObstacle.localPosition = pos;
-            Destroy(newObstacle, obstacleLifetime);
+            newObstacle.transform.localPosition = pos;
+  
         }
     }
 	
