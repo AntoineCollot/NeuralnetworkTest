@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using NeuralNetwork;
 
 public class NetworkGeneticTrainingJetPack : MonoBehaviour {
+
+    bool runEvolution;
 
     [Header("Networks")]
 
@@ -22,17 +25,36 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
 
     [Header("Mutations")]
 
-    [Range(0,10)]
+    [Range(0,1)]
     [SerializeField]
-    int geneToTransfer;
+    float mutateChance;
 
     [Range(0, 10)]
     [SerializeField]
     int geneToMutate;
 
+    [Header("Breeding")]
+
+    [Range(0, 1)]
+    [SerializeField]
+    float deathRatio;
+
+    [Header("UI")]
+
+    [SerializeField]
+    GenerationInfoPanelManager infoPanelManager;
+
+    [SerializeField]
+    Button runButton;
+
+    [SerializeField]
+    Button runOneButton;
+
+    int generation = 0;
+
     // Use this for initialization
     void Start () {
-       // TrySimulation();
+        GenerateNewPopulation();
     }
 
     [ContextMenu("Generate New Population")]
@@ -40,143 +62,111 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
     {
         for (int i = 0; i < population; i++)
         {
-            NeuralNetwork.Network newNetwork = Instantiate(neuralNetworkPrefab, transform);
-            newNetwork.inputLayer = input;
-            newNetwork.onOutput.AddListener(output.SetFly);
-
-            //Add the new network to the list of networks
-            NetworkIndividual newIndividual = new NetworkIndividual();
-            newIndividual.network = newNetwork;
-            networkPopulation.Add(newIndividual);
+            CreateNewNetwork();
         }
     }
 
     [ContextMenu("RunEvolution")]
     public void RunGeneticEvolution()
     {
+        runEvolution = true;
+        runButton.interactable = false;
+        runOneButton.interactable = false;
+        StartCoroutine(RunEvolutionLoop());
+    }
+
+    public void StopEvolution()
+    {
+        runButton.interactable = true;
+        runOneButton.interactable = true;
+        runEvolution = false;
+    }
+
+    [ContextMenu("RunEvolution")]
+    public void RunGeneticEvolutionOneRound()
+    {
         StartCoroutine(RunSingleEvolutionRound());
+    }
+
+    IEnumerator RunEvolutionLoop()
+    {
+        while(runEvolution)
+        {
+            yield return StartCoroutine(RunSingleEvolutionRound());
+        }
     }
 
     public IEnumerator RunSingleEvolutionRound()
     {
+        generation++;
+
         //Run the simulation for each individual
         for (int i = 0; i < networkPopulation.Count; i++)
         {
             yield return StartCoroutine(Simulation.Instance.RunSimulation(networkPopulation[i].network,0));
             networkPopulation[i].fitness = Simulation.Instance.step;
-            print("Network "+i.ToString()+" : "+Simulation.Instance.step);
         }
 
-        //Create a new list of the individual to pick randomly from
-        List<NetworkIndividual> candidates = new List<NetworkIndividual>(networkPopulation);
+        //Sort the list by fitness
+        networkPopulation.Sort(
+            delegate (NetworkIndividual p1, NetworkIndividual p2)
+            {
+                return p2.fitness.CompareTo(p1.fitness);
+            }
+        );
 
-        while(candidates.Count>1)
+        //Kill the weak individuals
+        int numberToKill = (int)(population * deathRatio);
+        Queue<NetworkIndividual> killedIndividual = new Queue<NetworkIndividual>();
+        for (int i = 0; i < numberToKill; i++)
         {
-            //Pick a frist contestant and remove it from the list
-            int randomId = Random.Range(0, candidates.Count);
-            NetworkIndividual contestant1 = candidates[randomId];
-            candidates.RemoveAt(randomId);
-
-            //Pick a second contestant and remove it from the list
-            randomId = Random.Range(0, candidates.Count);
-            NetworkIndividual contestant2 = candidates[randomId];
-            candidates.RemoveAt(randomId);
-
-            //Mutate the looser based on the winner DNA
-            if (contestant1.fitness > contestant2.fitness)
+            //Some survive by luck
+            if (Random.Range(0.0f, 1.0f) > 0.05f)
             {
-                print("Mutate " + contestant2.fitness.ToString() + " based on " + contestant1.fitness.ToString());
-                Mutate(contestant2.network, contestant1.network);
-            }
-            else
-            {
-                print("Mutate " + contestant1.fitness.ToString() + " based on " + contestant2.fitness.ToString());
-                Mutate(contestant1.network, contestant2.network);
+                killedIndividual.Enqueue(networkPopulation[networkPopulation.Count - 1]);
+                networkPopulation.RemoveAt(networkPopulation.Count - 1);
             }
         }
-    }
 
-    void Mutate(NeuralNetwork.Network weakIndividual, NeuralNetwork.Network strongindividual)
-    {
-        int geneCount = strongindividual.GetGeneCount();
-
-        TransferGene(strongindividual, weakIndividual, geneCount);
-        MutateGene(weakIndividual, geneCount);
-    }
-
-    void TransferGene(NeuralNetwork.Network from, NeuralNetwork.Network to,int geneCount)
-    {
-        for (int i = 0; i < geneToTransfer; i++)
+        //Calculate the average fitness for ui
+        float average = 0;
+        foreach (NetworkIndividual i in networkPopulation)
         {
-            int geneToTransferId = Random.Range(0, geneCount);
+            average += i.fitness;
+        }
+        average /= networkPopulation.Count;
 
-            //Look in HiddenLayers
-            for (int l = 0; l < from.hiddenLayers.Length; l++)
+
+        int mutatedCount = 0;
+        //Mutate some random individuals
+        foreach(NetworkIndividual i in networkPopulation)
+        {
+            if (mutateChance > Random.Range(0.0f, 1.0f))
             {
-                for (int n = 0; n < from.hiddenLayers[l].neurons.Length; n++)
-                {
-                    int neuronGeneCount = from.hiddenLayers[l].neurons[n].GetGeneCount();
-
-                    //If the gene isn't in this neuron, continue to search
-                    if (geneToTransferId >= neuronGeneCount)
-                        geneToTransferId -= neuronGeneCount;
-                    //If it's the last one, transfer the activation value
-                    else if (geneToTransferId == neuronGeneCount - 1)
-                    {
-                        print("transfered hidden activation value");
-                        to.hiddenLayers[l].neurons[n].activationValue = from.hiddenLayers[l].neurons[n].activationValue;
-                        geneToTransferId = -1;
-                        break;
-                    }
-                    //Else tranfer the weight
-                    else
-                    {
-                        print("transfered hidden weight");
-                        to.hiddenLayers[l].neurons[n].weights[geneToTransferId] = from.hiddenLayers[l].neurons[n].weights[geneToTransferId];
-                        geneToTransferId = -1;
-                        break;
-                    }
-                }
-                if (geneToTransferId < 0)
-                    break;
-            }
-
-            //Look in the output layer
-            if (geneToTransferId >= 0)
-            {
-                for (int n = 0; n < from.outputLayer.neurons.Length; n++)
-                {
-                    int neuronGeneCount = from.outputLayer.neurons[n].GetGeneCount();
-
-                    //If the gene isn't in this neuron, continue to search
-                    if (geneToTransferId >= neuronGeneCount)
-                    {
-                        print("ERROR");
-                        geneToTransferId -= neuronGeneCount;
-                    }
-                    //If it's the last one, transfer the activation value
-                    else if (geneToTransferId == neuronGeneCount - 1)
-                    {
-                        print("transfered out activation value");
-                        to.outputLayer.neurons[n].activationValue = from.outputLayer.neurons[n].activationValue;
-                        geneToTransferId = -1;
-                        break;
-                    }
-                    //Else tranfer the weight
-                    else
-                    {
-                        print("transfered out weight");
-                        to.outputLayer.neurons[n].weights[geneToTransferId] = from.outputLayer.neurons[n].weights[geneToTransferId];
-                        geneToTransferId = -1;
-                        break;
-                    }
-                }
+                MutateGene(i.network);
+                mutatedCount++;
             }
         }
+
+        //Breed
+        int survivorsCount = networkPopulation.Count;
+        int childrenToProduce = population - survivorsCount;
+        for (int i = 0; i < childrenToProduce; i++)
+        {
+            //Produce a child with two random survivors
+            NetworkIndividual child = killedIndividual.Dequeue();
+            networkPopulation.Add(child);
+            Breed(networkPopulation[Random.Range(0, survivorsCount)].network, networkPopulation[Random.Range(0, survivorsCount)].network, child.network);
+        }
+
+        //Display an information panel about this generation
+        infoPanelManager.NewGeneration(generation, networkPopulation[0].fitness,(int)average, mutatedCount, childrenToProduce, networkPopulation.Count);
     }
 
-    void MutateGene(NeuralNetwork.Network networkToMutate,int geneCount)
+    void MutateGene(NeuralNetwork.Network networkToMutate)
     {
+        int geneCount = networkToMutate.GetGeneCount();
+
         for (int i = 0; i < geneToMutate; i++)
         {
             int geneToTransferId = Random.Range(0, geneCount);
@@ -194,7 +184,6 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
                     //If it's the last one, transfer the activation value
                     else if (geneToTransferId == neuronGeneCount - 1)
                     {
-                        print("mutated hidden activation value");
                         networkToMutate.hiddenLayers[l].neurons[n].activationValue += Random.Range(-1, 1);
                         geneToTransferId = -1;
                         break;
@@ -202,7 +191,6 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
                     //Else tranfer the weight
                     else
                     {
-                        print("mutated hidden weight");
                         networkToMutate.hiddenLayers[l].neurons[n].weights[geneToTransferId] += Random.Range(-1, 1);
                         geneToTransferId = -1;
                         break;
@@ -222,13 +210,11 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
                     //If the gene isn't in this neuron, continue to search
                     if (geneToTransferId >= neuronGeneCount)
                     {
-                        print("ERROR");
                         geneToTransferId -= neuronGeneCount;
                     }
                     //If it's the last one, transfer the activation value
                     else if (geneToTransferId == neuronGeneCount - 1)
                     {
-                        print("mutated out activation value");
                         networkToMutate.outputLayer.neurons[n].activationValue += Random.Range(-1, 1);
                         geneToTransferId = -1;
                         break;
@@ -236,7 +222,6 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
                     //Else tranfer the weight
                     else
                     {
-                        print("mutated out weight");
                         networkToMutate.outputLayer.neurons[n].weights[geneToTransferId] += Random.Range(-1, 1);
                         geneToTransferId = -1;
                         break;
@@ -244,6 +229,104 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
                 }
             }
         }
+    }
+
+    void Breed(NeuralNetwork.Network mother, NeuralNetwork.Network father, NeuralNetwork.Network child)
+    {
+        //For each hidden layer
+        for (int l = 0; l < mother.hiddenLayers.Length; l++)
+        {
+            //For each neuron in the layer
+            for (int n = 0; n < mother.hiddenLayers[l].neurons.Length; n++)
+            {
+                //For each weights
+                for (int w = 0; w < mother.hiddenLayers[l].neurons[n].weights.Length; w++)
+                {
+                    //Take randomly the gene from the father or the mother
+                    if (Random.Range(0.0f, 1.0f) > 0.5f)
+                        child.hiddenLayers[l].neurons[n].weights[w] = mother.hiddenLayers[l].neurons[n].weights[w];
+                    else
+                        child.hiddenLayers[l].neurons[n].weights[w] = father.hiddenLayers[l].neurons[n].weights[w];
+                }
+
+                //Same for activation value of the neuron
+                if (Random.Range(0.0f, 1.0f) > 0.5f)
+                    child.hiddenLayers[l].neurons[n].activationValue = mother.hiddenLayers[l].neurons[n].activationValue;
+                else
+                    child.hiddenLayers[l].neurons[n].activationValue = father.hiddenLayers[l].neurons[n].activationValue;
+            }
+        }
+
+        ///Output Layer
+        //For each neuron in the layer
+        for (int n = 0; n < mother.outputLayer.neurons.Length; n++)
+        {
+            //For each weights
+            for (int w = 0; w < mother.outputLayer.neurons[n].weights.Length; w++)
+            {
+                //Take randomly the gene from the father or the mother
+                if (Random.Range(0.0f, 1.0f) > 0.5f)
+                    child.outputLayer.neurons[n].weights[w] = mother.outputLayer.neurons[n].weights[w];
+                else
+                    child.outputLayer.neurons[n].weights[w] = father.outputLayer.neurons[n].weights[w];
+            }
+
+            //Same for activation value of the neuron
+            if (Random.Range(0.0f, 1.0f) > 0.5f)
+                child.outputLayer.neurons[n].activationValue = mother.outputLayer.neurons[n].activationValue;
+            else
+                child.outputLayer.neurons[n].activationValue = father.outputLayer.neurons[n].activationValue;
+        }
+    }
+
+    NeuralNetwork.Network CreateNewNetwork()
+    {
+        //Create a new 
+        NeuralNetwork.Network newNetwork = Instantiate(neuralNetworkPrefab, transform);
+        newNetwork.inputLayer = input;
+        newNetwork.onOutput.AddListener(output.SetFly);
+
+        //Add the new network to the list of networks
+        NetworkIndividual newIndividual = new NetworkIndividual();
+        newIndividual.network = newNetwork;
+        networkPopulation.Add(newIndividual);
+
+        return newNetwork;
+    }
+
+
+    public void ReplacePopulation(List<NeuralNetwork.Network> loadedNetworks)
+    {
+        //Clear the population
+        while (networkPopulation.Count > 0)
+        {
+            Destroy(networkPopulation[0].network.gameObject);
+            networkPopulation.RemoveAt(0);
+        }
+
+        //Load the new population
+        population = loadedNetworks.Count;
+
+        for (int i = 0; i < population; i++)
+        {
+            NetworkIndividual newIndividual = new NetworkIndividual();
+            newIndividual.network = loadedNetworks[i];
+            loadedNetworks[i].inputLayer = input;
+            loadedNetworks[i].onOutput.AddListener(output.SetFly);
+            networkPopulation.Add(newIndividual);
+        }
+    }
+
+    public void ExportGeneration()
+    {
+        NeuralNetwork.Network[] generationPopulation = new NeuralNetwork.Network[networkPopulation.Count];
+
+        for (int i = 0; i < networkPopulation.Count; i++)
+        {
+            generationPopulation[i] = networkPopulation[i].network;
+        }
+
+        NetworkExporter.ExportGeneration(generationPopulation, generation);
     }
 
     [ContextMenu("RunSimulation")]

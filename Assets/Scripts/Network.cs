@@ -26,6 +26,11 @@ namespace NeuralNetwork
         // Use this for initialization
         void Start()
         {
+            InitializeConnections();
+        }
+
+        public void InitializeConnections()
+        {
             int connectionsCount = inputLayer.inputs.Length;
 
             for (int i = 0; i < hiddenLayers.Length; i++)

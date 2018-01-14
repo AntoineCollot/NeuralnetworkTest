@@ -7,16 +7,26 @@ namespace NeuralNetwork
     public class NetworkLoader : MonoBehaviour
     {
         [SerializeField]
-        InputLayer input;
+        TextAsset[] inputNetwork;
 
-        [SerializeField]
-        TextAsset inputNetwork;
-
-        [ContextMenu("Read Network")]
-        public void Read()
+        [ContextMenu("Load Networks")]
+        public void LoadNetworks()
         {
-            string[] layersData = System.Text.RegularExpressions.Regex.Split(inputNetwork.text, "#HiddenLayer|#OutputLayer");
-            //string[] lines = System.Text.RegularExpressions.Regex.Split(inputNetwork.text, System.Environment.NewLine);
+            List<Network> loadedNetworks = new List<Network>();
+
+            foreach (TextAsset data in inputNetwork)
+            {
+                loadedNetworks.Add(LoadNetwork(data.text));
+            }
+
+            GetComponent<NetworkGeneticTrainingJetPack>().ReplacePopulation(loadedNetworks);
+
+            print("loaded " + loadedNetworks.Count + " successfully");
+        }
+
+        public Network LoadNetwork(string data)
+        {
+            string[] layersData = System.Text.RegularExpressions.Regex.Split(data, "#HiddenLayer|#OutputLayer");
 
             List<NeuronLayer> layers = new List<NeuronLayer>();
             foreach (string layerData in layersData)
@@ -32,7 +42,8 @@ namespace NeuralNetwork
                 loadedNetwork.hiddenLayers[i] = layers[i];
             }
             loadedNetwork.outputLayer = layers[layers.Count - 1];
-            loadedNetwork.inputLayer = input;
+
+            return loadedNetwork;
         }
 
         NeuronLayer LoadLayer(string layerData)

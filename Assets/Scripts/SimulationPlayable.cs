@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class SimulationPlayable : Simulation
 {
-
     // Update is called once per frame
     protected void Update()
     {

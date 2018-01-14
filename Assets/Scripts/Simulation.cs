@@ -52,6 +52,6 @@ public class Simulation : MonoBehaviour {
 
     protected void OnGUI()
     {
-        GUI.Label(new Rect(10, 10, 100, 100), "Score : "+step.ToString());
+        GUI.Label(new Rect(Screen.width - 100, 10, 100, 100), "Score : "+step.ToString());
     }
 }
