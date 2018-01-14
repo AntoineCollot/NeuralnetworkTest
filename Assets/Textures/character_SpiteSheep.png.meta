@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 51e6c63b1212bce43bc6b75e265f9ff8
-timeCreated: 1515798062
+timeCreated: 1515875341
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -115,12 +115,12 @@ TextureImporter:
       name: Character_Fall
       rect:
         serializedVersion: 2
-        x: 22
+        x: 21
         y: 24
-        width: 21
-        height: 40
+        width: 22
+        height: 37
       alignment: 9
-      pivot: {x: 0.502535, y: 0.42625028}
+      pivot: {x: 0.52726936, y: 0.4590423}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

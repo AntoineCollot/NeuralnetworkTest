@@ -13,6 +13,11 @@ public class JetAnimation : MonoBehaviour {
     [SerializeField]
     ParticleSystem fire;
 
+    [Header("Death")]
+
+    [SerializeField]
+    ParticleSystem deathEffect;
+
     new SpriteRenderer renderer;
     JetPack jetPack;
 
@@ -20,12 +25,11 @@ public class JetAnimation : MonoBehaviour {
     void Start () {
         renderer = GetComponent<SpriteRenderer>();
         jetPack = GetComponent<JetPack>();
-
     }
 	
     public void CustomUpdate()
     {
-        if(Input.GetButton("Fly") || jetPack.fly)
+        if((Input.GetButton("Fly") || jetPack.fly) && !Simulation.Instance.gameOver )
         {
             renderer.sprite = IdleSprite;
             fire.Play();
@@ -36,5 +40,11 @@ public class JetAnimation : MonoBehaviour {
             fire.Stop();
         }
 
+    }
+
+    public void OnDeathEffect()
+    {
+        deathEffect.Play();
+        GetComponent<SpriteRenderer>().enabled = false;
     }
 }

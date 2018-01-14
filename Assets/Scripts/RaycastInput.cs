@@ -20,10 +20,15 @@ public class RaycastInput : InputLayer {
 
     Vector3[] directions;
 
+    float lastYPosition;
+
 	// Use this for initialization
 	void Awake () {
         CalculateDirections();
-        inputs = new float[raycastCount];
+
+        //One input per raycast + the y velocity input
+        inputs = new float[raycastCount + 1];
+        lastYPosition = transform.position.y;
     }
 
     void CalculateDirections()
@@ -45,14 +50,21 @@ public class RaycastInput : InputLayer {
 	
     public void CustomUpdate()
     {
+        //Set the raycast inputs
         for (int i = 0; i < directions.Length; i++)
         {
             float hitDistance = Physics2D.Raycast(transform.position, directions[i], raycastMaxDistance, raycastLayer).distance;
             inputs[i] = hitDistance / raycastMaxDistance;
         }
+
+        //Set the last input as the y velocity
+        float currentYPos = transform.position.y;
+        inputs[inputs.Length - 1] = currentYPos - lastYPosition;
+        lastYPosition = currentYPos;
+
     }
 
-    private void OnDrawGizmosSelected()
+    private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
 

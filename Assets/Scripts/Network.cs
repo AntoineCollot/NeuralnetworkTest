@@ -54,7 +54,29 @@ namespace NeuralNetwork
                 onOutput.Invoke(false);
         }
 
-        private void OnDrawGizmosSelected()
+        //Count how many gene this network has, for mutation purpose
+        public int GetGeneCount()
+        {
+            int geneCount = 0;
+
+            foreach(NeuronLayer layer in hiddenLayers)
+            {
+                foreach(Neuron n in layer.neurons)
+                {
+                    geneCount += n.GetGeneCount();
+                }
+            }
+
+            foreach (Neuron n in outputLayer.neurons)
+            {
+                geneCount += n.GetGeneCount();
+            }
+
+            return geneCount;
+        }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
         {
             //Inputs
             Gizmos.color = Color.green;
@@ -116,6 +138,7 @@ namespace NeuralNetwork
                 }
             }
         }
+#endif
     }
 
     public class InputLayer : MonoBehaviour
@@ -182,6 +205,12 @@ namespace NeuralNetwork
                 output = 0;
 
             return output;
+        }
+
+        public int GetGeneCount()
+        {
+            //Weigths + activationValue
+            return weights.Length + 1;
         }
 
         public float[] weights;

@@ -7,37 +7,51 @@ public class Simulation : MonoBehaviour {
 
     public UnityEvent onSimulationStep = new UnityEvent();
 
+    public UnityEvent onGameOver = new UnityEvent();
+
     [HideInInspector]
     public bool gameOver;
 
+    [HideInInspector]
+    public int step;
+
     public static Simulation Instance;
 
-    void Awake()
+    protected void Awake()
     {
         Instance = this;
+        step = 0;
     }
 
-	// Update is called once per frame
-	void Update () {
-        onSimulationStep.Invoke();
-    }
-
-    public void RunSimulation(NeuralNetwork.Network neuralNetwork,float deltaTime)
+    public IEnumerator RunSimulation(NeuralNetwork.Network neuralNetwork,float deltaTime)
     {
-        StartCoroutine(RunSimulationC(neuralNetwork,deltaTime));
-    }
-
-    IEnumerator RunSimulationC(NeuralNetwork.Network neuralNetwork,float deltaTime)
-    {
+        step = 0;
         gameOver = false;
         while (!gameOver)
         {
+            neuralNetwork.Compute();
+
             onSimulationStep.Invoke();
+            step++;
 
             if (deltaTime > 0)
                 yield return new WaitForSeconds(deltaTime);
         }
 
         yield return null;
+    }
+
+    public void GameOver()
+    {
+        //First time, invoke the event
+        if (!gameOver)
+            onGameOver.Invoke();
+
+        gameOver = true;
+    }
+
+    protected void OnGUI()
+    {
+        GUI.Label(new Rect(10, 10, 100, 100), "Score : "+step.ToString());
     }
 }

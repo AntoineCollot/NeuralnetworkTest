@@ -14,7 +14,7 @@ public class GameOverCollision : MonoBehaviour {
     {
         if (Physics2D.OverlapCircle(transform.position, colliderRadius, collisionLayer))
         {
-            Simulation.Instance.gameOver = true;
+            Simulation.Instance.GameOver();
         }
     }
 

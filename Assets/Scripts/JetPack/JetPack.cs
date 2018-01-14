@@ -17,6 +17,9 @@ public class JetPack : MonoBehaviour {
 
     public void CustomUpdate()
     {
+        if (Simulation.Instance.step < 50)
+            return;
+
         if (Input.GetButton("Fly") || fly)
         {
             momemtum += flyForce;
@@ -30,5 +33,12 @@ public class JetPack : MonoBehaviour {
     public void SetFly(bool value)
     {
         fly = value;
+    }
+
+    public void Reset()
+    {
+        transform.localPosition = Vector3.zero;
+        momemtum = Vector2.zero;
+        fly = false;
     }
 }
