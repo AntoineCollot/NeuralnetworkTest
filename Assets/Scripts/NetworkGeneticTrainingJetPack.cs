@@ -63,7 +63,7 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
         for (int i = 0; i < networkPopulation.Count; i++)
         {
             yield return StartCoroutine(Simulation.Instance.RunSimulation(networkPopulation[i].network,0));
-            networkPopulation[i].score = Simulation.Instance.step;
+            networkPopulation[i].fitness = Simulation.Instance.step;
             print("Network "+i.ToString()+" : "+Simulation.Instance.step);
         }
 
@@ -83,14 +83,14 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
             candidates.RemoveAt(randomId);
 
             //Mutate the looser based on the winner DNA
-            if (contestant1.score > contestant2.score)
+            if (contestant1.fitness > contestant2.fitness)
             {
-                print("Mutate " + contestant2.score.ToString() + " based on " + contestant1.score.ToString());
+                print("Mutate " + contestant2.fitness.ToString() + " based on " + contestant1.fitness.ToString());
                 Mutate(contestant2.network, contestant1.network);
             }
             else
             {
-                print("Mutate " + contestant1.score.ToString() + " based on " + contestant2.score.ToString());
+                print("Mutate " + contestant1.fitness.ToString() + " based on " + contestant2.fitness.ToString());
                 Mutate(contestant1.network, contestant2.network);
             }
         }
@@ -255,6 +255,6 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
     public class NetworkIndividual
     {
         public NeuralNetwork.Network network;
-        public int score;
+        public int fitness;
     }
 }
