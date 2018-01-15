@@ -65,7 +65,7 @@ namespace NeuralNetwork
                 // Determine whether the directory exists.
                 if (Directory.Exists(directoryPath))
                 {
-                    Console.WriteLine("That directory exists already (" + directoryPath + ")");
+                    Debug.Log("That directory exists already (" + directoryPath + ")");
                     return;
                 }
 
@@ -74,13 +74,15 @@ namespace NeuralNetwork
             }
             catch (Exception e)
             {
-                Console.WriteLine("The export generation process failed: {0}", e.ToString());
+                Debug.Log("The export generation process failed: "+ e.ToString());
             }
 
             for (int i = 0; i < neuralNetworks.Length; i++)
             {
                 Export(neuralNetworks[i], "Generation_" + generation.ToString() + @"\Network_" + i.ToString("00000"));
             }
+
+            Debug.Log("Exported successfully at : "+directoryPath);
         }
     }
 }

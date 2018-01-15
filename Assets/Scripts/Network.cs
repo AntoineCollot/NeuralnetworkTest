@@ -23,12 +23,6 @@ namespace NeuralNetwork
         public class OutputEvent : UnityEvent<bool> { }
         public OutputEvent onOutput = new OutputEvent();
 
-        // Use this for initialization
-        void Start()
-        {
-            InitializeConnections();
-        }
-
         public void InitializeConnections()
         {
             int connectionsCount = inputLayer.inputs.Length;

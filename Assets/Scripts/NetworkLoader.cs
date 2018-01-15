@@ -6,8 +6,16 @@ namespace NeuralNetwork
 {
     public class NetworkLoader : MonoBehaviour
     {
+        public bool loadAutomatically;
+
         [SerializeField]
         TextAsset[] inputNetwork;
+
+        void Start()
+        {
+            if (loadAutomatically)
+                LoadNetworks();
+        }
 
         [ContextMenu("Load Networks")]
         public void LoadNetworks()
@@ -35,7 +43,9 @@ namespace NeuralNetwork
                     layers.Add(LoadLayer(layerData));
             }
 
-            Network loadedNetwork = gameObject.AddComponent<Network>();
+            GameObject newObject = new GameObject("LoadedNetwork");
+            newObject.transform.SetParent(transform, false);
+            Network loadedNetwork = newObject.AddComponent<Network>();
             loadedNetwork.hiddenLayers = new NeuronLayer[layers.Count-1];
             for (int i = 0; i < layers.Count - 1; i++)
             {

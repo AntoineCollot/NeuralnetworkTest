@@ -8,6 +8,9 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
 
     bool runEvolution;
 
+    [SerializeField]
+    int targetScore;
+
     [Header("Networks")]
 
     public int population;
@@ -93,6 +96,19 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
         while(runEvolution)
         {
             yield return StartCoroutine(RunSingleEvolutionRound());
+
+            //Export the best individual each 10 generations
+            if(generation%10==0)
+            {
+                ExportBest();
+            }
+
+            if(networkPopulation[0].fitness>targetScore)
+            {
+                print("Best of generation " + generation + " reached target, and thus has been exported");
+                ExportBest();
+                StopEvolution();
+            }
         }
     }
 
@@ -285,6 +301,7 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
         NeuralNetwork.Network newNetwork = Instantiate(neuralNetworkPrefab, transform);
         newNetwork.inputLayer = input;
         newNetwork.onOutput.AddListener(output.SetFly);
+        newNetwork.InitializeConnections();
 
         //Add the new network to the list of networks
         NetworkIndividual newIndividual = new NetworkIndividual();
@@ -315,6 +332,11 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
             loadedNetworks[i].onOutput.AddListener(output.SetFly);
             networkPopulation.Add(newIndividual);
         }
+    }
+
+    public void ExportBest()
+    {
+        NetworkExporter.Export(networkPopulation[0].network, "BestIndividualGeneration_" + generation+" ["+ networkPopulation[0].fitness+"]");
     }
 
     public void ExportGeneration()
