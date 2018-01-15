@@ -75,7 +75,7 @@ namespace NeuralNetwork
         }
 
 #if UNITY_EDITOR
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
             //Inputs
             Gizmos.color = Color.green;

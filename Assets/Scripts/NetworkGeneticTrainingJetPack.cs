@@ -53,11 +53,20 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
     [SerializeField]
     Button runOneButton;
 
+    [SerializeField]
+    Graph bestCurve;
+
+    [SerializeField]
+    Graph averageCurve;
+
+
     int generation = 0;
 
     // Use this for initialization
     void Start () {
         GenerateNewPopulation();
+        averageCurve.curve.maxValue = targetScore;
+        bestCurve.curve.maxValue = targetScore;
     }
 
     [ContextMenu("Generate New Population")]
@@ -177,6 +186,10 @@ public class NetworkGeneticTrainingJetPack : MonoBehaviour {
 
         //Display an information panel about this generation
         infoPanelManager.NewGeneration(generation, networkPopulation[0].fitness,(int)average, mutatedCount, childrenToProduce, networkPopulation.Count);
+
+        //Update the curves
+        averageCurve.AddPoint(average);
+        bestCurve.AddPoint(networkPopulation[0].fitness);
     }
 
     void MutateGene(NeuralNetwork.Network networkToMutate)

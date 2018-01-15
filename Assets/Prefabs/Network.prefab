@@ -53,7 +53,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   inputLayer: {fileID: 0}
   hiddenLayers:
-  - neuronCount: 8
+  - neuronCount: 12
   outputLayer:
     neuronCount: 1
   onOutput:

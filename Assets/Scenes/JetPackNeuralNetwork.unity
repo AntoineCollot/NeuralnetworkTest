@@ -14687,6 +14687,8 @@ MonoBehaviour:
   infoPanelManager: {fileID: 0}
   runButton: {fileID: 0}
   runOneButton: {fileID: 0}
+  bestCurve: {fileID: 0}
+  averageCurve: {fileID: 0}
 --- !u!4 &1207267972
 Transform:
   m_ObjectHideFlags: 0
@@ -14713,7 +14715,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loadAutomatically: 1
   inputNetwork:
-  - {fileID: 4900000, guid: 3c3c779743dbb9f418413508d1a7c7e0, type: 3}
+  - {fileID: 4900000, guid: 5a90064865200c749b0f383f5d2a09af, type: 3}
 --- !u!114 &1207267974
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22123,9 +22125,9 @@ MonoBehaviour:
   - 0
   - 0
   - 0
-  raycastCount: 10
+  raycastCount: 15
   raycastAngleRange: 180
-  raycastMaxDistance: 10
+  raycastMaxDistance: 8
   raycastLayer:
     serializedVersion: 2
     m_Bits: 512

@@ -53,15 +53,17 @@ public class RaycastInput : InputLayer {
         //Set the raycast inputs
         for (int i = 0; i < directions.Length; i++)
         {
-            float hitDistance = Physics2D.Raycast(transform.position, directions[i], raycastMaxDistance, raycastLayer).distance;
-            inputs[i] = hitDistance / raycastMaxDistance;
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, directions[i], raycastMaxDistance, raycastLayer);
+            if(hit.transform==null)
+                inputs[i] = 1;
+            else
+                inputs[i] = hit.distance / raycastMaxDistance;
         }
 
         //Set the last input as the y velocity
         float currentYPos = transform.position.y;
         inputs[inputs.Length - 1] = currentYPos - lastYPosition;
         lastYPosition = currentYPos;
-
     }
 
     private void OnDrawGizmos()
